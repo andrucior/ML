@@ -28,7 +28,7 @@ class SpectrogramFileManager:
 
     def create_spectrograms_for_directory(self, audio_dir, save_dir):
         """
-        Function will convert .wav files from given directory into spectrgorams, and will save them as a .png in
+        Function will convert .wav files from given directory into spectrogams, and will save them as a .png in
         directory you provided.
         New created spectrogram files will have the same name as a corresponding .wav file.
 
@@ -38,7 +38,7 @@ class SpectrogramFileManager:
         wav_files_in_dir = glob.glob(f"{audio_dir}/*.wav")
         os.makedirs(save_dir, exist_ok=True)
         spectrogram_creator = SpectrogramCreator()
-        for file in tqdm(wav_files_in_dir, desc="Processing files"):
+        for file in tqdm(wav_files_in_dir, desc=f"Spectrograms for files in {audio_dir}"):
             s_db, sr = spectrogram_creator.create_spectrogram(file)
             file_name = pathlib.Path(file).stem
             self.save_spectrogram(s_db, sr, save_dir, file_name)

@@ -78,7 +78,8 @@ def upload_file(event=None):
 def process_audio(file_path):
 
     # Usuwanie ciszy
-    audio, sample_rate = dataProcessor.load_and_remove_silence(file_path)
+    audio_with_silence, sample_rate = librosa.load(file_path)
+    audio = dataProcessor.remove_silence(audio_with_silence)
 
     # Podział na segmenty
     segments = dataProcessor.split_into_segments(audio, sample_rate, segment_length=3)
