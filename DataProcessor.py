@@ -5,10 +5,47 @@ import librosa
 from pydub import AudioSegment, silence
 
 class DataProcessor:
+
     def __init__(self, class_1_speakers=None):
         if class_1_speakers is None:
             class_1_speakers = ['F1', 'F7', 'F8', 'M3', 'M6', 'M8']
         self.class_1_speakers = class_1_speakers
+
+    def create_test_and_validation(self, data, test_list, validation_list, target_dir):
+        """
+        Function dedicated to creating test data and validation data based on txt files provided in downloaded dataset
+
+        :param data: folder with dataset
+        :param test_list: txt file with list of test files
+        :param validation_list: txt file with list of validation files
+        :param target_dir: folder where test and validation folders will be saved
+        """
+        test_path = os.path.join(target_dir, "test")
+        validation_path = os.path.join(target_dir, "validation")
+        os.makedirs(test_path, exist_ok=True)
+        os.makedirs(validation_path, exist_ok=True)
+
+        for dirname in os.listdir(data):
+            folder_for_test = os.path.join(test_path, dirname)
+            folder_for_validation = os.path.join(validation_path, dirname)
+            os.makedirs(folder_for_test, exist_ok=True)
+            os.makedirs(folder_for_validation, exist_ok=True)
+
+        with open(test_list, 'r') as tl:
+            for file in tl.readlines():
+                file = file.replace('/', os.path.sep)
+                file = file[:-1]
+                save_path = os.path.join(test_path, file)
+                from_path = os.path.join(data, file)
+                os.rename(from_path, save_path)
+
+        with open(validation_list, 'r') as tl:
+            for file in tl.readlines():
+                file = file.replace('/', os.path.sep)
+                file = file[:-1]
+                save_path = os.path.join(validation_path, file)
+                from_path = os.path.join(data, file)
+                os.rename(from_path, save_path)
 
     def process_subfolders(self, input_dir, output_dir, segment_length):
         """Process each subfolder in the input directory."""
