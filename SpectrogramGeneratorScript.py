@@ -3,15 +3,15 @@ from SpectrogramFileManager import *
 from SpectrogramCreator import *
 
 # Set paths to directories
-audio_input_directory = r"C:\Users\kegor\ML\test_and_validation\test"  # Directory with input audio files
-audio_output_directory = r"C:\Users\kegor\ML\experiment"  # Directory for processed audio files
-spectrograms_directory = r"C:\Users\kegor\ML\experimentSpec"# Directory for spectrogram files
+audio_input_directory = r"audio"  # Directory with input audio files
+audio_output_directory = r"audio_processed"  # Directory for processed audio files
+spectrograms_directory = r"spectrograms" # Directory for spectrogram files
 
 # Create an instance of DataProcessor
 data_processor = DataProcessor()
 
 # Call method to process the data
-data_processor.process_data(audio_input_directory, audio_output_directory, segment_length=3)
+data_processor.process_data(audio_input_directory, audio_output_directory)
 
 sfm = SpectrogramFileManager()
 

@@ -13,7 +13,7 @@ class Net(nn.Module):
         # Calculate dimensions after convolutional layers
         self.fc1 = nn.Linear(16 * 190 * 93, 120)  # Adjusted for the dimensions needed for fc1
         self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 2)  # Output: 2 classes
+        self.fc3 = nn.Linear(84, 11)  # Output: 11 classes
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))  # Apply relu activation and pooling after first convolution

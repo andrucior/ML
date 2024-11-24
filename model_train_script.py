@@ -33,13 +33,18 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Device: {device}")
 
 # Define paths to data directories
-audio_output_directory = "data/spectrograms_trainset"  # Directory containing spectrogram images
+audio_output_directory = r"C:\Users\kegor\ML\train\train\spectrograms"  # Directory containing spectrogram images
 dataset = SpectrogramDataset(root_dir=audio_output_directory, transform=transform)
 
 # Calculate class weights based on the number of samples
 class_counts = dataset.class_counts
 total_samples = sum(class_counts.values())
-weights = torch.tensor([total_samples / class_counts[0], total_samples / class_counts[1]], dtype=torch.float32).to(device)
+weights = torch.tensor([total_samples / class_counts[0], total_samples / class_counts[1],
+                        total_samples / class_counts[2], total_samples / class_counts[3],
+                        total_samples / class_counts[4], total_samples / class_counts[5],
+                        total_samples / class_counts[6], total_samples / class_counts[7],
+                        total_samples / class_counts[8], total_samples / class_counts[9],
+                        total_samples / class_counts[10]], dtype=torch.float32).to(device)
 print(f"Class weights: {weights}")
 
 # Create DataLoader for training
