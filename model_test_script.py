@@ -9,8 +9,8 @@ from sklearn.metrics import confusion_matrix
 import torch.nn.functional as F
 
 # Paths to the model and test directory
-model_path = "trained_model_SGD_no_weights.pth"
-test_directory = "data/spectrograms_testset"
+model_path = r"C:\Users\kegor\ML\ML_2\trained_model4.pth"
+test_directory = r"C:\Users\kegor\ML\experimentSpec"
 class_dictionary = {'yes': 0, 'no': 1, 'up': 2, 'down': 3, 'left': 4, 'right': 5, 'on': 6, 'off': 7,
                     'stop': 8, 'go': 9, 'unknown': 10}
 
@@ -90,20 +90,19 @@ def test_model(model_path, test_directory):
 
                     # Collect probabilities for correct and incorrect classifications
                     if predicted_label == true_label:
-                        prob_correct[class_name].append(probabilities[class_dictionary[class_name]])
+                        prob_correct[true_label].append(probabilities[true_label])
                     else:
-                        prob_incorrect[class_name].append(probabilities[class_dictionary[class_name]])
-
+                        prob_incorrect[true_label].append(probabilities[true_label])
                     true_labels.append(true_label)
                     predicted_labels.append(predicted_label)
 
                     # Add probabilities for each class
-                    for i in class_dictionary:
+                    for i in class_dictionary.values():
                         folder_probabilities[i].append(probabilities[i])
 
             # Average probabilities for the folder
             avg_prob = {0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: []}
-            for i in class_dictionary:
+            for i in class_dictionary.values():
                 avg_prob[i] = np.mean(folder_probabilities[i]) if folder_probabilities[i] else 0
                 print(f"Average probability for class {i}: {avg_prob[0]:.2f}")
 
@@ -121,11 +120,12 @@ output_dir = 'model_accuracy_analysis'
 os.makedirs(output_dir, exist_ok=True)
 
 # Generate histograms for correct and incorrect predictions for each class
-plt.figure(figsize=(12, 10))
 
-for i in class_dictionary:
+
+for i in class_dictionary.values():
     # Class i - correct and incorrect classifications
-    plt.subplot(1, 2, 1)
+    # plt.subplot(1, 2, 1)
+    plt.figure(figsize=(12, 10))
     plt.hist(prob_correct[i], bins=20, color='blue', alpha=0.7, label='Correct')
     plt.hist(prob_incorrect[i], bins=20, color='red', alpha=0.5, label='Incorrect')
     plt.title(f"Probability Histogram - Class {i} ({os.path.basename(model_path)})")
@@ -133,11 +133,11 @@ for i in class_dictionary:
     plt.ylabel("Frequency")
     plt.legend()
 
-# Save the plots
-output_path = os.path.join(output_dir, f'probability_histograms_{os.path.basename(model_path).split(".")[0]}.png')
-plt.tight_layout()
-plt.savefig(output_path, format='png')
-print(f"Histogram saved to {output_path}")
+    # Save the plots
+    output_path = os.path.join(output_dir, f'probability_histograms_{os.path.basename(model_path).split(".")[0]}class{i}.png')
+    plt.tight_layout()
+    plt.savefig(output_path, format='png')
+    print(f"Histogram saved to {output_path}")
 
 # Show the plot
 plt.show()
