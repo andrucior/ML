@@ -1,0 +1,4 @@
+patience = 5
+full unknown data
+70-20-10 train-test-val splits
+interrupted after 37 epochs

@@ -1,0 +1,3 @@
+short spectrograms 
+50 epochs
+limited unknown data 20%
