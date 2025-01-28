@@ -1,0 +1,4 @@
+SmallNet,models/Adam_small_val_patience=12/Adam_small_val_patience=12.pth,0.2
+SmallNet,models/Adam_weights_small_val_patience=7/Adam_weights_small_val_patience=7.pth,0.2
+SmallNet,models/SGD_small_val_patience=12/SGD_small_val_patience=12.pth,0.2
+SmallNetExtraLayers,models/Adam_weights_small_4c3p_val_patience=7/Adam_weights_small_4c3p_val_patience=7.pth,0.4
