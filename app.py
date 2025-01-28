@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/data-processing-2
 import tkinter as tk
 from PIL import Image, ImageTk
 from tkinter import messagebox, filedialog

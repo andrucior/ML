@@ -1,11 +1,15 @@
 import os
+<<<<<<< HEAD
 import random
+=======
+>>>>>>> origin/data-processing-2
 from torchvision import transforms
 from torch.utils.data import Dataset
 from PIL import Image
 
 # Definition of the SpectrogramDataset class
 class SpectrogramDataset(Dataset):
+<<<<<<< HEAD
     def __init__(self, root_dir, transform=None, unknown_fraction=0.2):
         """
         Initialize the SpectrogramDataset.
@@ -14,6 +18,9 @@ class SpectrogramDataset(Dataset):
         :param transform: Transformations to be applied to the images.
         :param unknown_fraction: Fraction of 'unknown' class samples to include in the dataset.
         """
+=======
+    def __init__(self, root_dir, transform=None):
+>>>>>>> origin/data-processing-2
         self.root_dir = root_dir
         self.transform = transform
         self.data = []
@@ -23,6 +30,7 @@ class SpectrogramDataset(Dataset):
 
         # Traverse through subfolders and add file paths
         for subdir, _, files in os.walk(root_dir):
+<<<<<<< HEAD
             subdir_name = os.path.basename(os.path.normpath(subdir))
             class_label = self.class_dictionary.get(subdir_name, self.class_dictionary['unknown'])
 
@@ -38,6 +46,18 @@ class SpectrogramDataset(Dataset):
             for file in files:
                 self.data.append((os.path.join(subdir, file), class_label))
                 self.class_counts[class_label] += 1  # Increase count for the respective class
+=======
+            for file in files:
+                if file.endswith(".png"):
+                    subdir_name = os.path.basename(os.path.normpath(subdir))
+                    if subdir_name not in self.class_dictionary:
+                        label = self.class_dictionary['unknown']
+                    else:
+                        label = self.class_dictionary[subdir_name]
+
+                    self.data.append((os.path.join(subdir, file), label))
+                    self.class_counts[label] += 1  # Increase count for the respective class
+>>>>>>> origin/data-processing-2
 
     def __len__(self):
         return len(self.data)
@@ -50,8 +70,16 @@ class SpectrogramDataset(Dataset):
             image = self.transform(image)
 
         return image, label
+<<<<<<< HEAD
 
 # Define image transformation to convert images to tensors
 transform = transforms.Compose([
     transforms.ToTensor()
 ])
+=======
+    
+# Define image transformation to convert images to tensors
+transform = transforms.Compose([
+    transforms.ToTensor()
+])
+>>>>>>> origin/data-processing-2

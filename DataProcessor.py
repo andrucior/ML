@@ -134,4 +134,8 @@ class DataProcessor:
         sf.write(file_output_path, audio, sample_rate)
 
     def process_data(self, extract_path, processed_data_path, segment_length=3):
+<<<<<<< HEAD
         self.process_subfolders(extract_path, processed_data_path, segment_length)
+=======
+        self.process_subfolders(extract_path, processed_data_path, segment_length)
+>>>>>>> origin/data-processing-2

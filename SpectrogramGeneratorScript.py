@@ -3,9 +3,15 @@ from SpectrogramFileManager import *
 from SpectrogramCreator import *
 
 # Set paths to directories
+<<<<<<< HEAD
 audio_input_directory = "data/audio"  # Directory with input audio files
 audio_output_directory = "data/audio_processed"  # Directory for processed audio files
 spectrograms_directory = "data/spectrograms" # Directory for spectrogram files
+=======
+audio_input_directory = r"audio"  # Directory with input audio files
+audio_output_directory = r"audio_processed"  # Directory for processed audio files
+spectrograms_directory = r"spectrograms" # Directory for spectrogram files
+>>>>>>> origin/data-processing-2
 
 # Create an instance of DataProcessor
 data_processor = DataProcessor()
@@ -29,4 +35,8 @@ for subfolder in os.listdir(audio_output_directory):
         
         # Call the function to generate spectrograms
         sfm.create_spectrograms_for_directory(audio_dir=subfolder_path, save_dir=save_subfolder)
+<<<<<<< HEAD
         print(f"Spectrograms generated for directory: {subfolder_path} and saved in: {save_subfolder}")
+=======
+        print(f"Spectrograms generated for directory: {subfolder_path} and saved in: {save_subfolder}")
+>>>>>>> origin/data-processing-2
