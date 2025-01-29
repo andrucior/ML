@@ -1,3 +1,4 @@
 models/Adam_small_val_patience=12/Adam_small_val_patience=12.pth
 models/Adam_weights_small_val_patience=7/Adam_weights_small_val_patience=7.pth
 models/SGD_small_val_patience=12/SGD_small_val_patience=12.pth
+equal weights here

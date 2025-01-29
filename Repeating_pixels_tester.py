@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 
+# Check for patterns in pixel repeating in spectrograms
+
 # Path to the directory containing spectrograms
 spectrogram_dir = "data/demo"
 

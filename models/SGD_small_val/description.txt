@@ -1,4 +1,8 @@
+SGD optimizer
 patience = 5
-full unknown data
+full unknown data used
 70-20-10 train-test-val splits
-interrupted after 37 epochs
+epoch limit at 100
+interrupted due to going over the patience parameter after 37 epochs
+end validation: 87,5%
+end loss: 0.25

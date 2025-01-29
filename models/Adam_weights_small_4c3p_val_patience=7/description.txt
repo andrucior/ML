@@ -1,0 +1,11 @@
+Adam optimizer used
+Network with more layers used
+epoch limit: 64
+patience: 7
+70-20-10 train-test-val split
+initial weights used for every class
+training terminated at epoch 58 by patience parameter
+end loss: 0.1
+end validation: 92%
+
+Model described in raport, point 5.6

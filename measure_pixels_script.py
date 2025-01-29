@@ -1,6 +1,8 @@
 from PIL import Image
 import os
 
+# Measure image dimensions for a directory
+
 # Directory containing the spectrograms
 directory_path = "spectrograms_demo/f1"
 

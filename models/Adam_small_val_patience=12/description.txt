@@ -1,0 +1,10 @@
+Adam optimizer used
+epoch limit: 100
+patience: 12
+100% of unknown data used during training
+70-20-10 train-test-val split
+training interrupted at epoch 29 by the patience parameter
+end training loss: 0.075
+end training validation: 90.5%
+
+Model described in raport, point 5.5.2

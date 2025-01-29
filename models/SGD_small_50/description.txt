@@ -1,3 +1,6 @@
-short spectrograms 
-50 epochs
-limited unknown data 20%
+SGD optimizer
+short spectrograms used
+50 epochs of training
+limited unknown data - 20% of available unknown data training
+80-20 train-test split
+training end loss: 0,2

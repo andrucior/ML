@@ -1,0 +1,12 @@
+Adam optimizer used
+epoch limit: 64
+patience: 7
+100% of available unknown data used for training
+70-20-10 train-test-val split
+initial weights used for every class
+training terminated after reaching the epoch limit
+end loss: 0.5
+end validation: 87.5%
+One dropout layer used during training
+
+Model described in raport, point 6.1.3

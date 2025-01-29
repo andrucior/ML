@@ -181,7 +181,7 @@ for mode_name, mode_data in results.items():
     mode_output_dir = os.path.join(base_output_dir, mode_name)
     os.makedirs(mode_output_dir, exist_ok=True)
 
-    # 1. Zapisanie macierzy pomyłek
+    # 1. Save confusion matrix
     cm = mode_data['confusion_matrix']
     disp = ConfusionMatrixDisplay(
         confusion_matrix=cm, 
@@ -195,13 +195,13 @@ for mode_name, mode_data in results.items():
     plt.savefig(os.path.join(mode_output_dir, f"{mode_name}_confusion_matrix.png"))
     plt.close()
 
-    # 2. Histogramy prawdopodobieństw, entropii i niepewności
+    # 2. Generate histograms for probabilities, entropy, and uncertainty
     for label, probs in mode_data['class_probabilities'].items():
         if len(probs) == 0: 
             continue
         class_name = [k for k, v in class_dictionary.items() if v == label][0]
 
-        # Prawdopodobieństwa
+        # Probability distribution
         plt.figure()
         plt.hist(probs, bins=20, color='blue', alpha=0.7)
         plt.title(f"Probability Distribution for '{class_name}' - {mode_name}")
@@ -216,6 +216,7 @@ for mode_name, mode_data in results.items():
             continue
         class_name = [k for k, v in class_dictionary.items() if v == label][0]
 
+        # Entropy distribution
         plt.figure()
         plt.hist(ent_list, bins=20, color='green', alpha=0.7)
         plt.title(f"Entropy Distribution for '{class_name}' - {mode_name}")
@@ -230,6 +231,7 @@ for mode_name, mode_data in results.items():
             continue
         class_name = [k for k, v in class_dictionary.items() if v == label][0]
 
+        # Uncertainty distribution
         plt.figure()
         plt.hist(unc_list, bins=20, color='red', alpha=0.7)
         plt.title(f"Uncertainty Distribution for '{class_name}' - {mode_name}")
@@ -244,16 +246,16 @@ for mode_name, mode_data in results.items():
         row_sum = np.sum(cm[i, :])
         if row_sum == 0:
             continue
-        # Obliczamy udziały
+        # Calculate class proportions
         proportions = cm[i, :] / row_sum
 
-        # Nazwa faktycznej klasy
+        # Get actual class name
         class_name = [k for k, v in class_dictionary.items() if v == i][0]
 
         plt.figure()
         x_indices = np.arange(num_classes)
         plt.bar(x_indices, proportions, color='orange', alpha=0.7)
-        # Etykiety na osi X to nazwy klas (przewidywanych)
+        # X-axis labels correspond to predicted class names
         pred_class_names = [k for k, v in sorted(class_dictionary.items(), key=lambda item: item[1])]
         plt.xticks(x_indices, pred_class_names, rotation=45)
         plt.title(f"Distribution of predicted classes\n(Actual class: {class_name}, Mode: {mode_name})")
@@ -271,7 +273,7 @@ os.makedirs(combined_output_dir, exist_ok=True)
 modes = list(results.keys())
 num_modes = len(modes)
 
-# Probability Distribution Plots
+# Combined Probability Distribution Plots
 for label in class_dictionary.values():
         class_name = [k for k, v in class_dictionary.items() if v == label][0]
         
@@ -290,7 +292,7 @@ for label in class_dictionary.values():
         plt.savefig(os.path.join(combined_output_dir, f"combined_probability_distribution_{class_name}.png"))
         plt.close()
 
-# Entropy Distribution Plots
+# Combined Entropy Distribution Plots
 for label in class_dictionary.values():
         class_name = [k for k, v in class_dictionary.items() if v == label][0]
         
@@ -309,7 +311,7 @@ for label in class_dictionary.values():
         plt.savefig(os.path.join(combined_output_dir, f"combined_entropy_distribution_{class_name}.png"))
         plt.close()
 
-# Uncertainty Distribution Plots
+# Combined Uncertainty Distribution Plots
 for label in class_dictionary.values():
         class_name = [k for k, v in class_dictionary.items() if v == label][0]
         
@@ -329,7 +331,7 @@ for label in class_dictionary.values():
         plt.close()
 
 
-# Predicted Class Distribution Plots
+# Combined Predicted Class Distribution Plots
 num_classes = len(class_dictionary)
 for i in range(num_classes):
         row_sums = [np.sum(results[mode]['confusion_matrix'][i, :]) for mode in modes]

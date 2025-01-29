@@ -1,3 +1,7 @@
+SGD optimizer
 25 epochs
-short spectrograms
-limited unknown data
+short spectrograms used
+trained on 20% of the unknown data
+80-20 train-test split
+training end loss: 0,3
+Model looks to be undertained

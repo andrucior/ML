@@ -1,0 +1,10 @@
+SGD optimizer
+epoch limit: 100
+patience: 12
+70-20-10 train-test-val split
+training interrupted by patience parameter at epoch 99
+end validation: 90%
+end loss: 0.08
+100% of unknown data used
+
+Model described in raport, point 5.4.3

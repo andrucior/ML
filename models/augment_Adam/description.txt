@@ -1,0 +1,10 @@
+Adam optimizer used
+Two extra augmented data sets used during training
+epoch limit: 50
+patience: 7
+70-20-10 train-test-val split
+initial weights used for every class
+training terminated at epoch 20 by the patience parameter
+end validation: 85%
+
+Model described in raport, point 5.1

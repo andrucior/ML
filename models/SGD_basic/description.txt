@@ -1,0 +1,10 @@
+SGD optimizer
+15 epochs training
+big, non-compressed spectrograms
+Used 20% of unknown data
+80-20 train-test split
+end loss: 0,1
+Model visibly undertrained
+.pth file not available on GitHub due to its too large size
+
+Model described in raport, point 5.1
