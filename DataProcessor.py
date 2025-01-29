@@ -97,45 +97,9 @@ class DataProcessor:
 
         return appended_audio
 
-    def split_into_segments(self, audio_data, sample_rate, segment_length):
-        """
-        Split audio data into segments.
-        :param audio_data: Array of audio samples.
-        :param sample_rate: Sample rate of audio data.
-        :param segment_length: Length of each segment in seconds.
-        :return: List of audio segments.
-        """
-        segment_samples = int(segment_length * sample_rate)
-        segments = []
-
-        for i in range(0, len(audio_data), segment_samples):
-            segment = audio_data[i:i + segment_samples]
-            if len(segment) == segment_samples:
-                segments.append(segment)
-
-        return segments
-
-    def split_and_save_segments(self, audio_data, sample_rate, segment_length, output_subfolder, speaker, file_name):
-        """
-        Split audio data into segments and save them with appropriate labels.
-        Uses `split_into_segments` to get segments, then saves each to disk.
-        """
-        segments = self.split_into_segments(audio_data, sample_rate, segment_length)
-        label = '1' if speaker.upper() in self.class_1_speakers else '0'
-
-        for i, segment in enumerate(segments):
-            segment_filename = f'class_{label}_segment_{i}_{file_name}'
-            segment_output_path = os.path.join(output_subfolder, segment_filename)
-            sf.write(segment_output_path, segment, sample_rate)
-            print(f"Saved {segment_output_path}")
-
     def save_processed_audio(self, audio, sample_rate, output_subfolder, file_name):
         file_output_path = os.path.join(output_subfolder, file_name)
         sf.write(file_output_path, audio, sample_rate)
 
     def process_data(self, extract_path, processed_data_path, segment_length=3):
-<<<<<<< HEAD
         self.process_subfolders(extract_path, processed_data_path, segment_length)
-=======
-        self.process_subfolders(extract_path, processed_data_path, segment_length)
->>>>>>> origin/data-processing-2

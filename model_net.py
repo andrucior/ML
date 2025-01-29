@@ -22,9 +22,5 @@ class Net(nn.Module):
         x = F.relu(self.fc1(x))  # Apply relu activation after first fully connected layer
         x = F.relu(self.fc2(x))  # Apply relu activation after second fully connected layer
         x = self.fc3(x)  # Final output layer without activation (usually handled by loss function in classification)
-<<<<<<< HEAD
-        return x
-=======
         return x
 
->>>>>>> origin/data-processing-2

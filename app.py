@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/data-processing-2
 import tkinter as tk
 from PIL import Image, ImageTk
 from tkinter import messagebox, filedialog
@@ -86,7 +82,8 @@ def process_audio(file_path):
     audio = dataProcessor.remove_silence(audio_with_silence)
 
     # Podział na segmenty
-    segments = dataProcessor.split_into_segments(audio, sample_rate, segment_length=3)
+    # segments = dataProcessor.split_into_segments(audio, sample_rate, segment_length=3) redundant
+    segments = [audio]
 
     # Generowanie spektrogramów dla każdego segmentu
     probabilities_class_0 = []
