@@ -22,7 +22,7 @@ from MC_small_net import SmallNetWithDropout as SmallNetWithDropout1
 from MC_small_net2 import SmallNetWithDropout as SmallNetWithDropout2
 
 
-# Parametry audio
+# audio params
 SAMPLE_RATE = 40000
 DURATION = 5
 SAVE_DIR = "recordings"
@@ -121,20 +121,13 @@ def predict_image_ensemble(models, image_path, device):
     predicted_class = int(np.argmax(mean_probs))
     return predicted_class, mean_probs
 
-
-def start_recording_thread():
-    # Run the recording function in a separate thread
-    threading.Thread(target=record_audio).start()
-
-
-# Funkcja do załadowania pliku
 def upload_file(event=None):
     filename = filedialog.askopenfilename(filetypes=[("WAV files", "*.wav")], title="Select a WAV file")
     if filename:
         text_box.config(state=tk.NORMAL)
         text_box.insert(tk.END, filename)
         text_box.config(state=tk.DISABLED)
-        process_audio(filename)  # Przetwarzanie pliku
+        process_audio(filename)  # process audio
 
 def generate_spectrogram(audio_path):
     """Generate and save spectrogram from audio."""
