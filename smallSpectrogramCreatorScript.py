@@ -3,9 +3,9 @@ from PIL import Image
 import numpy as np
 
 # Input directory containing subdirectories with full spectrograms
-input_dir = "data/spectrograms"
+input_dir = "demo_data/spectrograms"
 # Output directory to save transformed spectrograms
-output_dir = "data/short_spectrograms"
+output_dir = "demo_data/short_spectrograms"
 os.makedirs(output_dir, exist_ok=True)
 
 # Function to process and resize spectrograms

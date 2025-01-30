@@ -11,6 +11,21 @@ import time
 import random
 
 
+# SCRIPT PARAMETERS
+
+# Paths to data directories
+train_directory = "data/short_sets_val/train"
+val_directory = "data/short_sets_val/val"
+
+early_stopping_patience = 7  # Number of epochs without validation improvement after which training will be stopped
+unknown_percentage = 100  # Adjust percentage as needed
+
+# Training parameters
+model_name = "Adam_weights_small_val_patience=7"  # Model name
+target_loss = 0
+epoch_limit = 100
+
+
 def filter_unknown(dataset, unknown_percentage):
     """
     Filters the dataset to include only the specified percentage of 'unknown' class samples.
@@ -59,13 +74,9 @@ def calculate_accuracy(model, dataloader, device):
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Device: {device}")
 
-# Paths to data directories
-train_directory = "data/short_sets_val/train"
-val_directory = "data/short_sets_val/val"
 
-early_stopping_patience = 7  # Liczba epok bez poprawy, po której trening zostanie zatrzymany
-best_val_accuracy = 0  # Najlepsza dokładność walidacji
-no_improvement_epochs = 0  # Liczba kolejnych epok bez poprawy
+best_val_accuracy = 0  
+no_improvement_epochs = 0  
 random.seed(42)
 
 # Load training and validation datasets
@@ -79,7 +90,7 @@ weights = torch.tensor(weights).to(device)
 print("Weights: ",weights)
 
 # Filter unknown class in validation set (e.g., keep 20% of unknown data)
-unknown_percentage = 100  # Adjust percentage as needed
+
 train_dataset = filter_unknown(train_dataset,unknown_percentage)
 val_dataset = filter_unknown(val_dataset, unknown_percentage)
 
@@ -92,10 +103,6 @@ net = SmallNet().to(device)
 criterion = nn.CrossEntropyLoss(weight=weights)
 optimizer = optim.Adam(net.parameters(), lr=0.001)
 
-# Training parameters
-model_name = "Adam_weights_small_val_patience=7"  # Model name
-target_loss = 0
-epoch_limit = 100
 
 # Create directories for saving the model and analysis
 model_dir = os.path.join("models", model_name)

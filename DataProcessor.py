@@ -9,7 +9,7 @@ class DataProcessor:
 
     def __init__(self, class_1_speakers=None):
         if class_1_speakers is None:
-            class_1_speakers = ['F1', 'F7', 'F8', 'M3', 'M6', 'M8']
+            class_1_speakers = ['F1', 'F7', 'F8', 'M3', 'M6', 'M8'] # left from old dataset
         self.class_1_speakers = class_1_speakers
 
     def create_test_and_validation(self, data, test_list, validation_list, target_dir):
@@ -74,6 +74,20 @@ class DataProcessor:
                 trimmed_audio = self.remove_silence(audio_data)
                 appended_audio = self.append_to_one_seccond(trimmed_audio, sample_rate)
                 self.save_processed_audio(appended_audio, sample_rate, output_subfolder, file)
+
+    def split_audio_on_silence(audio_path,save_dir):
+        """Split audio into segments using silence detection."""
+        audio = AudioSegment.from_wav(audio_path)
+        chunks = silence.split_on_silence(audio, min_silence_len=300, silence_thresh=-40)
+        segment_paths = []
+
+        for i, chunk in enumerate(chunks):
+            segment_filename = f"segment_{i}.wav"
+            segment_path = os.path.join(save_dir, segment_filename)
+            chunk.export(segment_path, format="wav")
+            segment_paths.append(segment_path)
+
+        return segment_paths
 
     def remove_silence(self, audio, top_db=15):
         """Load audio file and remove silent parts."""

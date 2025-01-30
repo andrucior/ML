@@ -4,3 +4,5 @@ short spectrograms used
 limited unknown data - 20% of available unknown data training
 80-20 train-test split
 training end loss: 0,2
+
+Model described in raport, point 5.2

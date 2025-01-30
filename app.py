@@ -6,22 +6,27 @@ from scipy.io.wavfile import write
 import numpy as np
 import threading
 import os
+import time
 import tempfile
 import librosa
 import librosa.display
 import matplotlib.pyplot as plt
-from pydub import AudioSegment
-from pydub import silence
 from DataProcessor import *
 from SpectrogramCreator import *
-from model_net import Net  # Import model definition
 import torch
 import torch.nn.functional as F
 from torchvision import transforms
 import soundfile as sf
 
+# Net architectures
+from small_model_net import SmallNet
+from small_model_net_extra_layers import SmallNetExtraLayers
+from MC_small_net import SmallNetWithDropout as SmallNetWithDropout1
+from MC_small_net2 import SmallNetWithDropout as SmallNetWithDropout2
+
+
 # Parametry audio
-SAMPLE_RATE = 44100
+SAMPLE_RATE = 40000
 DURATION = 5
 SAVE_DIR = "recordings"
 
@@ -30,12 +35,94 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 
 # Load model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model_path = "trained_model_SGD_no_weights.pth"  # Path to your trained model
-model = Net().to(device)
-model.load_state_dict(torch.load(model_path, map_location=device))
-model.eval()
+print("device: ",device)
+
 dataProcessor = DataProcessor()
 spectrogramCreator = SpectrogramCreator()
+
+# Class dictionary
+class_dictionary = {
+    'yes': 0, 'no': 1, 'up': 2, 'down': 3, 'left': 4,
+    'right': 5, 'on': 6, 'off': 7, 'stop': 8, 'go': 9, 'unknown': 10
+}
+
+model_paths = [
+    ("SmallNet", "models/Adam_small_val_patience=12/Adam_small_val_patience=12.pth", 0.1),
+    ("SmallNet", "models/Adam_weights_small_val_patience=7/Adam_weights_small_val_patience=7.pth", 0.1),
+    ("SmallNet", "models/SGD_small_val_patience=12/SGD_small_val_patience=12.pth", 0.2),
+    ("SmallNetExtraLayers", "models/Adam_weights_small_4c3p_val_patience=7/Adam_weights_small_4c3p_val_patience=7.pth", 0.3),
+    ("SmallNet", "models/augment_Adam/augment_Adam.pth", 0.3),
+]
+
+def load_ensemble_models(model_paths):
+    """
+    Load models from the specified paths, supporting multiple architectures.
+
+    :param model_paths: List of tuples (architecture, model_path, weight)
+    :return: List of (model, weight, label)
+    """
+    models = []
+
+    print("Loading models...")
+
+    for arch, path, weight in model_paths:
+        if arch == "SmallNet":
+            model = SmallNet().to(device)
+        elif arch == "SmallNetExtraLayers":
+            model = SmallNetExtraLayers().to(device)
+        elif arch == "SmallNetWithDropout1":
+            model = SmallNetWithDropout1().to(device)
+        elif arch == "SmallNetWithDropout2":
+            model = SmallNetWithDropout2().to(device)
+        else:
+            raise ValueError(f"Unknown architecture: {arch}")
+
+        model.load_state_dict(torch.load(path, map_location=device))
+        model.eval()
+        models.append((model, weight, arch))
+
+    return models
+
+# Load models once at startup
+loaded_models = load_ensemble_models(model_paths)
+print(f"{len(loaded_models)} models loaded")
+
+# Image preprocessing function
+transform = transforms.Compose([
+    transforms.ToTensor()
+])
+
+def predict_image_ensemble(models, image_path, device):
+    """
+    Predict the class of a single image using an ensemble of models.
+
+    :param models: List of models in the ensemble
+    :param image_path: Path to the image file
+    :param device: CPU or CUDA
+    :return:
+       - predicted_class (int): class index from averaged probabilities
+       - mean_probs (np.array): averaged class probabilities (softmax)
+    """
+    image = Image.open(image_path).convert("RGB")
+    image = transform(image).unsqueeze(0).to(device)
+
+    all_probs = []
+    weights = []
+
+    with torch.no_grad():
+        for model, weight, arch in models:
+            output = model(image)
+            probs = F.softmax(output, dim=1)  # shape: (1, num_classes)
+            all_probs.append(probs.cpu().numpy()[0] * weight)  # Weighted probabilities
+            weights.append(weight)
+
+    # Weighted average
+    all_probs = np.array(all_probs)
+    mean_probs = np.sum(all_probs, axis=0) / np.sum(weights)  # Normalize by total weight
+
+    predicted_class = int(np.argmax(mean_probs))
+    return predicted_class, mean_probs
+
 
 # Funkcja nagrywania audio i zapisu do pliku
 def record_audio():
@@ -60,9 +147,11 @@ def record_audio():
     finally:
         root.after(2000, lambda: recording_label.config(text="Press Record", fg="black"))
 
+
 def start_recording_thread():
     # Run the recording function in a separate thread
     threading.Thread(target=record_audio).start()
+
 
 # Funkcja do załadowania pliku
 def upload_file(event=None):
@@ -73,55 +162,80 @@ def upload_file(event=None):
         text_box.config(state=tk.DISABLED)
         process_audio(filename)  # Przetwarzanie pliku
 
+def generate_spectrogram(audio_path):
+    """Generate and save spectrogram from audio."""
+    start_time = time.perf_counter()
+    S_db, sr = spectrogramCreator.create_spectrogram(audio_path)
 
-# Funkcja przetwarzania audio
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_spectrogram:
+        plt.figure(figsize=(10, 5))
+        librosa.display.specshow(S_db, sr=sr, x_axis=None, y_axis='log', cmap='magma')
+        plt.axis('off')
+        plt.savefig(temp_spectrogram.name, bbox_inches='tight', pad_inches=0)
+        plt.close()
+
+    spectrogram_time = time.perf_counter() - start_time
+    return temp_spectrogram.name, spectrogram_time
+
 def process_audio(file_path):
+    """Process audio by splitting on silence, creating spectrograms, and evaluating."""
+    start_total = time.perf_counter()
+    start_audio = time.perf_counter()
 
-    # Usuwanie ciszy
-    audio_with_silence, sample_rate = librosa.load(file_path)
-    audio = dataProcessor.remove_silence(audio_with_silence)
+    segment_paths = DataProcessor.split_audio_on_silence(file_path,SAVE_DIR)
+    print(f"Audio split into {len(segment_paths)} segments.")
 
-    # Podział na segmenty
-    # segments = dataProcessor.split_into_segments(audio, sample_rate, segment_length=3) redundant
-    segments = [audio]
+    audio_processing_time = time.perf_counter() - start_audio
 
-    # Generowanie spektrogramów dla każdego segmentu
-    probabilities_class_0 = []
-    probabilities_class_1 = []
-    
-    # Generate spectrograms and predict for each segment
-    for i, segment in enumerate(segments):
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_segment_file:
-            sf.write(temp_segment_file.name, segment, sample_rate)
-            
-            # Generowanie spektrogramu
-            S_db, sr = spectrogramCreator.create_spectrogram(temp_segment_file.name)
-            
-            # Zapisz spektrogram jako obraz tymczasowy
-            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_img_file:
-                plt.figure(figsize=(10, 5))
-                librosa.display.specshow(S_db, sr=sr, x_axis='time', y_axis='log', cmap='magma')
-                plt.axis('off')
-                plt.savefig(temp_img_file.name, bbox_inches='tight', pad_inches=0)
-                plt.close()  # Zamknij wykres, aby oszczędzać pamięć
+    best_word = "unknown"
+    best_confidence = 0
 
-                # Przewiduj klasę dla wygenerowanego spektrogramu
-                predicted_label, probabilities = predict_image(model, temp_img_file.name, device)
-                probabilities_class_0.append(probabilities[0])
-                probabilities_class_1.append(probabilities[1])
+    total_spectrogram_time = 0
+    total_evaluation_time = 0
 
-    # Calculate average probabilities for each class
-    avg_prob_class_0 = np.mean(probabilities_class_0) if probabilities_class_0 else 0
-    avg_prob_class_1 = np.mean(probabilities_class_1) if probabilities_class_1 else 0
-    if avg_prob_class_0 < avg_prob_class_1:
-        most_probable_class = "Class 1"
-        most_probable_prob = avg_prob_class_1
-    else:
-        most_probable_class = "Class 0"
-        most_probable_prob = avg_prob_class_0
-        
-    # Wyświetl wynik w GUI
-    answer_label.config(text=f"Most Probable: {most_probable_class} with probability: {most_probable_prob:.2f}")
+    for segment_path in segment_paths:
+        audio_data, sample_rate = librosa.load(segment_path, sr=None)
+        processed_audio = dataProcessor.append_to_one_seccond(
+            dataProcessor.remove_silence(audio_data), sample_rate
+        )
+
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_processed_audio:
+            sf.write(temp_processed_audio.name, processed_audio, sample_rate)
+            processed_audio_path = temp_processed_audio.name
+
+        # Generate full spectrogram
+        full_spectrogram_path, spectrogram_time = generate_spectrogram(processed_audio_path)
+        total_spectrogram_time += spectrogram_time
+
+        # Load and compress spectrogram
+        img = Image.open(full_spectrogram_path)
+        img_array = np.array(img)
+        reduced_img_array = img_array[:, ::12]
+        reduced_img = Image.fromarray(reduced_img_array)
+
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_reduced_spectrogram:
+            reduced_img.save(temp_reduced_spectrogram.name)
+            reduced_spectrogram_path = temp_reduced_spectrogram.name
+
+        start_eval = time.perf_counter()
+        predicted_label, confidence = predict_image_ensemble(loaded_models, reduced_spectrogram_path, device)
+        total_evaluation_time += time.perf_counter() - start_eval
+
+        confidence_value = confidence[predicted_label]
+        word = [k for k, v in class_dictionary.items() if v == predicted_label][0]
+        print(f"Segment {segment_path}: {word} ({confidence_value:.2f})")
+
+        if confidence_value > 0.5 and predicted_label != class_dictionary["unknown"]:
+            if confidence_value > best_confidence:
+                best_confidence = confidence_value
+                best_word = word
+
+    total_time = time.perf_counter() - start_total
+    print(f"Audio Processing: {audio_processing_time:.2f}s, Spectrogram: {total_spectrogram_time:.2f}s, Evaluation: {total_evaluation_time:.2f}s, Total: {total_time:.2f}s")
+
+    answer_label.config(text=f"Prediction: {best_word}, Confidence: {best_confidence:.2f}")
+    recording_label.config(text="Ready!", fg="black")
+
 
 def predict_image(model, image_path, device):
     transform = transforms.Compose([transforms.ToTensor()])
@@ -133,6 +247,7 @@ def predict_image(model, image_path, device):
         _, predicted = torch.max(output, 1)
     return predicted.item(), probabilities[0].cpu().numpy()
 
+
 # Create the GUI
 root = tk.Tk()
 root.title("Voice Recorder")
@@ -143,7 +258,7 @@ image_path = ".\\resources\\record.png"
 original_image = Image.open(image_path)
 resized_image = original_image.resize((50, 50))  # Set the desired width and height here
 rec_img = ImageTk.PhotoImage(resized_image)
-record_button = tk.Button(root, image=rec_img, command=start_recording_thread, bg='#ffffff',activebackground='#ffffff')
+record_button = tk.Button(root, image=rec_img, command=start_recording_thread, bg='#ffffff', activebackground='#ffffff')
 record_button.place(x=50, y=20)
 # record_button.pack(pady=20)
 
@@ -161,7 +276,6 @@ recording_label.place(x=110, y=40)
 text_box = tk.Text(root, height=1, width=30)  # height in lines, width in characters
 text_box.place(x=110, y=100)
 text_box.config(state=tk.DISABLED)
-
 
 answer_label = tk.Label(root, text="Here will be an answer", fg="black", font=("Arial", 9))
 answer_label.place(x=110, y=140)

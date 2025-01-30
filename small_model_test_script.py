@@ -85,7 +85,6 @@ def test_model(model_path, test_directory, class_dictionary):
             folder_label = class_dictionary.get(subfolder, class_dictionary['unknown'])
             files = [f for f in os.listdir(subfolder_path) if f.endswith(".png")]
 
-            # If the class is 'unknown' (folder not in class_dictionary), use only 20% of data
             if subfolder not in class_dictionary or subfolder == 'unknown':
                 num_files_to_test = max(1, int(len(files) * unknown_amount_factor))
                 files = random.sample(files, num_files_to_test)

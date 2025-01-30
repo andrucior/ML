@@ -5,3 +5,5 @@ trained on 20% of the unknown data
 80-20 train-test split
 training end loss: 0,3
 Model looks to be undertained
+
+Model described in raport, point 5.2

@@ -7,4 +7,4 @@ end validation: 90%
 end loss: 0.08
 100% of unknown data used
 
-Model described in raport, point 5.4.3
+Model described in raport, point 5.4

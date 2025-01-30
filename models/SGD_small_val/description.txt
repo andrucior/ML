@@ -6,3 +6,5 @@ epoch limit at 100
 interrupted due to going over the patience parameter after 37 epochs
 end validation: 87,5%
 end loss: 0.25
+
+Model described in raport, point 5.4.2
