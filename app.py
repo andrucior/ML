@@ -3,14 +3,11 @@ from PIL import Image, ImageTk
 from tkinter import messagebox, filedialog
 import sounddevice as sd
 from scipy.io.wavfile import write
-import numpy as np
+import datetime
 import threading
-import os
 import time
 import tempfile
-import librosa
 import librosa.display
-import matplotlib.pyplot as plt
 from DataProcessor import *
 from SpectrogramCreator import *
 import torch
@@ -29,6 +26,7 @@ from MC_small_net2 import SmallNetWithDropout as SmallNetWithDropout2
 SAMPLE_RATE = 40000
 DURATION = 5
 SAVE_DIR = "recordings"
+
 
 # Tworzy katalog, jeśli nie istnieje
 os.makedirs(SAVE_DIR, exist_ok=True)
@@ -124,30 +122,6 @@ def predict_image_ensemble(models, image_path, device):
     return predicted_class, mean_probs
 
 
-# Funkcja nagrywania audio i zapisu do pliku
-def record_audio():
-    try:
-        recording_label.config(text="Recording...", fg="red")
-        root.update()
-
-        # Rozpocznij nagrywanie
-        recording = sd.rec(int(SAMPLE_RATE * DURATION), samplerate=SAMPLE_RATE, channels=2, dtype='int16')
-        sd.wait()
-
-        # Tymczasowy zapis nagrania do pliku .wav
-        temp_filename = os.path.join(SAVE_DIR, "temp_recording.wav")
-        write(temp_filename, SAMPLE_RATE, recording)
-
-        recording_label.config(text="Recording complete!", fg="green")
-        process_audio(temp_filename)  # Wywołaj funkcję przetwarzania
-
-    except Exception as e:
-        recording_label.config(text="Error occurred", fg="red")
-        messagebox.showerror("Error", f"An error occurred: {str(e)}")
-    finally:
-        root.after(2000, lambda: recording_label.config(text="Press Record", fg="black"))
-
-
 def start_recording_thread():
     # Run the recording function in a separate thread
     threading.Thread(target=record_audio).start()
@@ -225,10 +199,12 @@ def process_audio(file_path):
         word = [k for k, v in class_dictionary.items() if v == predicted_label][0]
         print(f"Segment {segment_path}: {word} ({confidence_value:.2f})")
 
-        if confidence_value > 0.5 and predicted_label != class_dictionary["unknown"]:
+        if confidence_value > 0.25 and predicted_label != class_dictionary["unknown"]:
             if confidence_value > best_confidence:
                 best_confidence = confidence_value
                 best_word = word
+        elif predicted_label == class_dictionary["unknown"] and confidence_value > best_confidence and best_word == "unknown":
+            best_confidence = confidence_value
 
     total_time = time.perf_counter() - start_total
     print(f"Audio Processing: {audio_processing_time:.2f}s, Spectrogram: {total_spectrogram_time:.2f}s, Evaluation: {total_evaluation_time:.2f}s, Total: {total_time:.2f}s")
@@ -236,17 +212,44 @@ def process_audio(file_path):
     answer_label.config(text=f"Prediction: {best_word}, Confidence: {best_confidence:.2f}")
     recording_label.config(text="Ready!", fg="black")
 
+# Audio recording functions
+recording = None
+recording_active = False
+audio_data = []
 
-def predict_image(model, image_path, device):
-    transform = transforms.Compose([transforms.ToTensor()])
-    image = Image.open(image_path).convert("RGB")
-    image = transform(image).unsqueeze(0).to(device)  # Add batch dimension and move to device
-    with torch.no_grad():
-        output = model(image)
-        probabilities = F.softmax(output, dim=1)  # Calculate class probabilities
-        _, predicted = torch.max(output, 1)
-    return predicted.item(), probabilities[0].cpu().numpy()
+def toggle_recording():
+    """Toggle recording on/off."""
+    global recording, recording_active, audio_data
 
+    if not recording_active:
+        recording_label.config(text="Recording... Press again to stop", fg="red")
+        root.update()
+        audio_data = []
+
+        def callback(indata, frames, time, status):
+            if status:
+                print(status)
+            audio_data.append(indata.copy())
+
+        recording = sd.InputStream(samplerate=SAMPLE_RATE, channels=2, callback=callback, dtype='int16')
+        recording.start()
+        recording_active = True
+
+    else:
+        recording.stop()
+        recording.close()
+        recording_active = False
+        recording_label.config(text="Processing...", fg="blue")
+        root.update()
+
+        audio_array = np.concatenate(audio_data, axis=0)
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{SAVE_DIR}/recording_{timestamp}.wav"
+        sf.write(filename, audio_array, SAMPLE_RATE)
+        print(f"Recording saved: {filename}")
+
+        recording_label.config(text="Recording complete!", fg="green")
+        process_audio(filename)
 
 # Create the GUI
 root = tk.Tk()
@@ -258,7 +261,7 @@ image_path = ".\\resources\\record.png"
 original_image = Image.open(image_path)
 resized_image = original_image.resize((50, 50))  # Set the desired width and height here
 rec_img = ImageTk.PhotoImage(resized_image)
-record_button = tk.Button(root, image=rec_img, command=start_recording_thread, bg='#ffffff', activebackground='#ffffff')
+record_button = tk.Button(root, image=rec_img, command=toggle_recording, bg='#ffffff', activebackground='#ffffff')
 record_button.place(x=50, y=20)
 # record_button.pack(pady=20)
 

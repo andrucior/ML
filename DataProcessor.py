@@ -78,7 +78,7 @@ class DataProcessor:
     def split_audio_on_silence(audio_path,save_dir):
         """Split audio into segments using silence detection."""
         audio = AudioSegment.from_wav(audio_path)
-        chunks = silence.split_on_silence(audio, min_silence_len=300, silence_thresh=-40)
+        chunks = silence.split_on_silence(audio, min_silence_len=300, silence_thresh=-50)
         segment_paths = []
 
         for i, chunk in enumerate(chunks):
