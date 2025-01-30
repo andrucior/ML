@@ -1,0 +1,1 @@
+Some files from the test folder to test the app
